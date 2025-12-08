@@ -1,132 +1,228 @@
 import React, { useState, useEffect } from 'react';
-import api from '../axios';
-import { DollarSign, TrendingUp, Users, Calendar } from 'lucide-react';
-import Sidebar from '../Components/Sidebar';
-import SubscriptionList from '../Components/SubscriptionList';
-import AddSubscriptionModal from '../Components/AddSubscriptionModal';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
+import { DollarSign, Calendar, TrendingUp, Users, Plus } from 'lucide-react';
+import SubscriptionList from '@/Components/Dashboard/SubscriptionList';
+import AddSubscriptionModal from '@/Components/Modals/AddSubscriptionModal';
 
-export default function Dashboard() {
-    const [dashboardData, setDashboardData] = useState(null);
-    const [loading, setLoading] = useState(true);
+export default function Dashboard({ auth }) {
+    const [stats, setStats] = useState({
+        totalMonthly: 0,
+        totalYearly: 0,
+        activeSubscriptions: 0,
+        savingsFromSharing: 0,
+    });
+
+    const [subscriptions, setSubscriptions] = useState([
+        // Sample data
+        {
+            id: 1,
+            name: 'Netflix Premium',
+            amount: 199.99,
+            billing_cycle: 'monthly',
+            next_billing_date: '2024-12-15',
+            category: 'Entertainment',
+            status: 'active',
+            is_shared: true,
+            description: 'Family plan shared with 4 members',
+        },
+        {
+            id: 2,
+            name: 'Spotify Premium',
+            amount: 59.99,
+            billing_cycle: 'monthly',
+            next_billing_date: '2024-12-20',
+            category: 'Music',
+            status: 'active',
+            is_shared: false,
+            description: 'Individual plan',
+        },
+        {
+            id: 3,
+            name: 'Adobe Creative Cloud',
+            amount: 679.99,
+            billing_cycle: 'monthly',
+            next_billing_date: '2024-12-10',
+            category: 'Productivity',
+            status: 'active',
+            is_shared: false,
+            description: 'Photography plan',
+        },
+    ]);
+
     const [showAddModal, setShowAddModal] = useState(false);
 
     useEffect(() => {
-        loadDashboard();
-    }, []);
+        calculateStats();
+    }, [subscriptions]);
 
-    const loadDashboard = async () => {
-        try {
-            const response = await api.get('/dashboard');
-            setDashboardData(response.data);
-        } catch (error) {
-            console.error('Failed to load dashboard:', error);
-        } finally {
-            setLoading(false);
+    const calculateStats = () => {
+        const monthly = subscriptions.reduce((sum, sub) => {
+            if (sub.status === 'active') {
+                const amount = parseFloat(sub.amount);
+                switch (sub.billing_cycle) {
+                    case 'daily':
+                        return sum + (amount * 30);
+                    case 'weekly':
+                        return sum + (amount * 4);
+                    case 'monthly':
+                        return sum + amount;
+                    case 'yearly':
+                        return sum + (amount / 12);
+                    default:
+                        return sum + amount;
+                }
+            }
+            return sum;
+        }, 0);
+
+        setStats({
+            totalMonthly: monthly,
+            totalYearly: monthly * 12,
+            activeSubscriptions: subscriptions.filter(s => s.status === 'active').length,
+            savingsFromSharing: 150.00, // Example savings
+        });
+    };
+
+    const handleAddSubscription = async (formData) => {
+        // For now, add to local state
+        // Later, this will make an API call
+        const newSubscription = {
+            id: Date.now(),
+            ...formData,
+            status: 'active',
+            is_shared: false,
+        };
+        
+        setSubscriptions(prev => [...prev, newSubscription]);
+        
+        // TODO: Replace with actual API call
+        // await api.post('/subscriptions', formData);
+    };
+
+    const handleEditSubscription = (subscription) => {
+        console.log('Edit subscription:', subscription);
+        // TODO: Implement edit modal
+        alert('Edit functionality coming soon!');
+    };
+
+    const handleDeleteSubscription = (id) => {
+        if (confirm('Are you sure you want to delete this subscription?')) {
+            setSubscriptions(prev => prev.filter(sub => sub.id !== id));
+            
+            // TODO: Replace with actual API call
+            // await api.delete(`/subscriptions/${id}`);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-xl">Loading...</div>
-            </div>
-        );
-    }
-
-    const { summary, upcoming_bills, by_category, sharing } = dashboardData;
-
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <Sidebar />
-            
-            <div className="flex-1 p-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-600">Track and manage all your subscriptions</p>
-                </div>
+        <AuthenticatedLayout
+            user={auth.user}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>}
+        >
+            <Head title="Dashboard" />
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <StatCard
-                        icon={<DollarSign className="w-6 h-6" />}
-                        title="Monthly Total"
-                        value={`${summary.total_monthly}`}
-                        subtitle={`${summary.total_yearly}/year`}
-                        color="blue"
-                    />
-                    <StatCard
-                        icon={<Calendar className="w-6 h-6" />}
-                        title="Active Subscriptions"
-                        value={summary.active_subscriptions}
-                        subtitle="Currently tracking"
-                        color="green"
-                    />
-                    <StatCard
-                        icon={<TrendingUp className="w-6 h-6" />}
-                        title="Savings"
-                        value={`${summary.savings_from_sharing}`}
-                        subtitle="From sharing"
-                        color="purple"
-                    />
-                    <StatCard
-                        icon={<Users className="w-6 h-6" />}
-                        title="Groups"
-                        value={sharing.groups_owned + sharing.groups_joined}
-                        subtitle={`${sharing.groups_owned} owned, ${sharing.groups_joined} joined`}
-                        color="pink"
-                    />
-                </div>
-
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Upcoming Bills */}
-                    <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold">Upcoming Bills</h2>
-                            <button
-                                onClick={() => setShowAddModal(true)}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                            >
-                                Add Subscription
-                            </button>
-                        </div>
-                        {upcoming_bills.length > 0 ? (
-                            <div className="space-y-3">
-                                {upcoming_bills.map((sub) => (
-                                    <UpcomingBillItem key={sub.id} subscription={sub} />
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-gray-500 text-center py-8">
-                                No upcoming bills in the next 30 days
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    {/* Welcome Message */}
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                        <div className="p-6 text-gray-900">
+                            <h3 className="text-2xl font-bold mb-2">
+                                Welcome back, {auth.user.name}! 👋
+                            </h3>
+                            <p className="text-gray-600">
+                                Here's an overview of your subscription spending
                             </p>
-                        )}
+                        </div>
                     </div>
 
-                    {/* Category Breakdown */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">By Category</h2>
-                        <div className="space-y-3">
-                            {by_category.map((cat, idx) => (
-                                <CategoryItem key={idx} data={cat} />
-                            ))}
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <StatCard
+                            icon={<DollarSign className="w-6 h-6" />}
+                            title="Monthly Total"
+                            value={`R${stats.totalMonthly.toFixed(2)}`}
+                            subtitle={`R${stats.totalYearly.toFixed(2)}/year`}
+                            color="blue"
+                        />
+                        <StatCard
+                            icon={<Calendar className="w-6 h-6" />}
+                            title="Active Subscriptions"
+                            value={stats.activeSubscriptions}
+                            subtitle="Currently tracking"
+                            color="green"
+                        />
+                        <StatCard
+                            icon={<TrendingUp className="w-6 h-6" />}
+                            title="Savings"
+                            value={`R${stats.savingsFromSharing.toFixed(2)}`}
+                            subtitle="From sharing"
+                            color="purple"
+                        />
+                        <StatCard
+                            icon={<Users className="w-6 h-6" />}
+                            title="Groups"
+                            value={0}
+                            subtitle="0 owned, 0 joined"
+                            color="pink"
+                        />
+                    </div>
+
+                    {/* Subscriptions Section */}
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-semibold text-gray-900">
+                                    Your Subscriptions
+                                </h3>
+                                <button
+                                    onClick={() => setShowAddModal(true)}
+                                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span>Add Subscription</span>
+                                </button>
+                            </div>
+
+                            <SubscriptionList
+                                subscriptions={subscriptions}
+                                onEdit={handleEditSubscription}
+                                onDelete={handleDeleteSubscription}
+                            />
                         </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <QuickAction
+                            title="Connect Bank Account"
+                            description="Automatically detect subscriptions from your transactions"
+                            buttonText="Connect Now"
+                            color="blue"
+                        />
+                        <QuickAction
+                            title="Create Sharing Group"
+                            description="Split subscription costs with friends and family"
+                            buttonText="Create Group"
+                            color="purple"
+                        />
+                        <QuickAction
+                            title="Get Recommendations"
+                            description="AI-powered suggestions to save money"
+                            buttonText="View Insights"
+                            color="green"
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Add Subscription Modal */}
-            {showAddModal && (
-                <AddSubscriptionModal
-                    onClose={() => setShowAddModal(false)}
-                    onSuccess={() => {
-                        setShowAddModal(false);
-                        loadDashboard();
-                    }}
-                />
-            )}
-        </div>
+            <AddSubscriptionModal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onSubmit={handleAddSubscription}
+            />
+        </AuthenticatedLayout>
     );
 }
 
@@ -151,37 +247,21 @@ function StatCard({ icon, title, value, subtitle, color }) {
     );
 }
 
-// Upcoming Bill Item Component
-function UpcomingBillItem({ subscription }) {
-    const daysUntil = Math.ceil(
-        (new Date(subscription.next_billing_date) - new Date()) / (1000 * 60 * 60 * 24)
-    );
+// Quick Action Component
+function QuickAction({ title, description, buttonText, color }) {
+    const colorClasses = {
+        blue: 'bg-blue-600 hover:bg-blue-700',
+        purple: 'bg-purple-600 hover:bg-purple-700',
+        green: 'bg-green-600 hover:bg-green-700',
+    };
 
     return (
-        <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-                <h3 className="font-medium text-gray-900">{subscription.name}</h3>
-                <p className="text-sm text-gray-500">
-                    Due in {daysUntil} {daysUntil === 1 ? 'day' : 'days'}
-                </p>
-            </div>
-            <div className="text-right">
-                <p className="font-semibold text-gray-900">${subscription.amount}</p>
-                <p className="text-xs text-gray-500">{subscription.billing_cycle}</p>
-            </div>
-        </div>
-    );
-}
-
-// Category Item Component
-function CategoryItem({ data }) {
-    return (
-        <div className="flex items-center justify-between">
-            <div>
-                <p className="font-medium text-gray-900">{data.category}</p>
-                <p className="text-sm text-gray-500">{data.count} subscriptions</p>
-            </div>
-            <p className="font-semibold text-gray-900">${data.amount.toFixed(2)}</p>
+        <div className="bg-white rounded-lg shadow p-6">
+            <h4 className="font-semibold text-gray-900 mb-2">{title}</h4>
+            <p className="text-gray-600 text-sm mb-4">{description}</p>
+            <button className={`w-full ${colorClasses[color]} text-white px-4 py-2 rounded-lg transition`}>
+                {buttonText}
+            </button>
         </div>
     );
 }

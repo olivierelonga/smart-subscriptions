@@ -168,7 +168,7 @@ export default function Welcome({ auth }) {
                             <span className="text-xl font-bold text-white">SubTrack</span>
                         </div>
                         <p className="mb-4">Take control of your subscriptions and save money effortlessly.</p>
-                        <p className="text-sm">© 2024 SubTrack. All rights reserved.</p>
+                        <p className="text-sm">© 2026 SubTrack. All rights reserved.</p>
                     </div>
                 </footer>
             </div>
