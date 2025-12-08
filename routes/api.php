@@ -6,6 +6,10 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaidController;
+use App\Http\Controllers\PayFastController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RecommendationController;
+use App\Http\Controllers\PaymentController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -41,4 +45,22 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Recommendations
+    Route::get('/recommendations', [RecommendationController::class, 'index']);
+    Route::post('/recommendations/generate', [RecommendationController::class, 'generate']);
+    Route::post('/recommendations/{recommendation}/dismiss', [RecommendationController::class, 'dismiss']);
+    Route::post('/recommendations/{recommendation}/complete', [RecommendationController::class, 'complete']);
+
+    // Route::post('/subscribe', [PayFastController::class, 'subscribe']);
+    // Route::post('/subscription/cancel', [PayFastController::class, 'cancelSubscription']);
+
+    Route::get('/plans', [PaymentController::class, 'plans']);
+    Route::post('/subscribe', [PaymentController::class, 'subscribe']);
+    Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription']);
 });
+
+
+// Public routes
+Route::get('/plans', [PayFastController::class, 'showPlans']);
+Route::post('/payment/notify', [PayFastController::class, 'notify']);

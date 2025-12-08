@@ -41,4 +41,8 @@ return [
         'env' => env('PLAID_ENV', 'sandbox'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
 ];
