@@ -34,5 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    
+    'plaid' => [
+        'client_id' => env('PLAID_CLIENT_ID'),
+        'secret' => env('PLAID_SECRET'),
+        'env' => env('PLAID_ENV', 'sandbox'),
+    ],
 
 ];
