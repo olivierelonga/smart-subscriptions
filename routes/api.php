@@ -52,8 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recommendations/{recommendation}/dismiss', [RecommendationController::class, 'dismiss']);
     Route::post('/recommendations/{recommendation}/complete', [RecommendationController::class, 'complete']);
 
-    // Route::post('/subscribe', [PayFastController::class, 'subscribe']);
-    // Route::post('/subscription/cancel', [PayFastController::class, 'cancelSubscription']);
+    Route::post('/subscribe', [PayFastController::class, 'subscribe']);
+    Route::post('/subscription/cancel', [PayFastController::class, 'cancelSubscription']);
 
     Route::get('/plans', [PaymentController::class, 'plans']);
     Route::post('/subscribe', [PaymentController::class, 'subscribe']);

@@ -19,7 +19,8 @@ class PlaidService
         $this->secret = config('services.plaid.secret');
         
         // Use sandbox environment
-        $this->baseUrl = config('services.plaid.env') === 'production' 
+        $env = config('services.plaid.env', 'sandbox');
+        $this->baseUrl = $env === 'production' 
             ? 'https://production.plaid.com'
             : 'https://sandbox.plaid.com';
     }
@@ -92,37 +93,6 @@ class PlaidService
             return $data['transactions'];
         } catch (GuzzleException $e) {
             throw new \Exception('Failed to get transactions: ' . $e->getMessage());
-        }
-    }
-
-    // Sync Transactions (newer method, more efficient)
-    public function syncTransactions($accessToken, $cursor = null)
-    {
-        try {
-            $payload = [
-                'client_id' => $this->clientId,
-                'secret' => $this->secret,
-                'access_token' => $accessToken,
-            ];
-
-            if ($cursor) {
-                $payload['cursor'] = $cursor;
-            }
-
-            $response = $this->client->post($this->baseUrl . '/transactions/sync', [
-                'json' => $payload,
-            ]);
-
-            $data = json_decode($response->getBody(), true);
-            return [
-                'added' => $data['added'] ?? [],
-                'modified' => $data['modified'] ?? [],
-                'removed' => $data['removed'] ?? [],
-                'next_cursor' => $data['next_cursor'] ?? null,
-                'has_more' => $data['has_more'] ?? false,
-            ];
-        } catch (GuzzleException $e) {
-            throw new \Exception('Failed to sync transactions: ' . $e->getMessage());
         }
     }
 }

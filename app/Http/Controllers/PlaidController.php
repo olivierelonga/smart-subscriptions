@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\PlaidAccount;
 use App\Models\Transaction;
 use App\Services\PlaidService;
-use App\Services\SubscriptionDetectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class PlaidController extends Controller
@@ -30,6 +29,8 @@ class PlaidController extends Controller
                 'link_token' => $linkToken,
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to create Plaid link token: ' . $e->getMessage());
+            
             return response()->json([
                 'message' => 'Failed to create link token',
                 'error' => $e->getMessage(),
@@ -55,7 +56,7 @@ class PlaidController extends Controller
                 'plaid_item_id' => $tokens['item_id'],
                 'institution_name' => $validated['metadata']['institution']['name'] ?? null,
                 'institution_id' => $validated['metadata']['institution']['institution_id'] ?? null,
-                'account_ids' => json_encode($validated['metadata']['accounts']),
+                'account_ids' => json_encode($validated['metadata']['accounts'] ?? []),
                 'is_active' => true,
             ]);
 
@@ -67,6 +68,8 @@ class PlaidController extends Controller
                 'account' => $plaidAccount,
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to exchange Plaid token: ' . $e->getMessage());
+            
             return response()->json([
                 'message' => 'Failed to connect bank account',
                 'error' => $e->getMessage(),
@@ -137,12 +140,9 @@ class PlaidController extends Controller
             // Update last synced timestamp
             $account->update(['last_synced_at' => Carbon::now()]);
 
-            // Detect subscriptions
-            app(SubscriptionDetectionService::class)->detectSubscriptions($account->user_id);
-
             return $syncedCount;
         } catch (\Exception $e) {
-            \Log::error('Failed to sync transactions: ' . $e->getMessage());
+            Log::error('Failed to sync transactions for account ' . $account->id . ': ' . $e->getMessage());
             return 0;
         }
     }

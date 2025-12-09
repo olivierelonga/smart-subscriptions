@@ -28,6 +28,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    Route::get('/bank-accounts', function () {
+        return Inertia::render('BankAccounts');
+    })->name('bank-accounts');
+
 });
 
 require __DIR__.'/auth.php';
