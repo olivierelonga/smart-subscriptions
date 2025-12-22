@@ -52,4 +52,10 @@ return [
         'passphrase' => env('PAYFAST_PASSPHRASE', ''),
         'testmode' => env('PAYFAST_TESTMODE', true),
     ],
+
+    'stitch' => [
+        'client_id' => env('STITCH_CLIENT_ID'),
+        'client_secret' => env('STITCH_CLIENT_SECRET'),
+        'env' => env('STITCH_ENV', 'sandbox'),
+    ],
 ];

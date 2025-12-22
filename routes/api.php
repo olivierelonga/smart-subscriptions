@@ -11,6 +11,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\PaymentController;
 
+
+
+//test
+Route::get('/test', function () {
+    return response()->json(['message' => 'API is working!']);
+});
+
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -33,12 +40,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/groups/join', [GroupController::class, 'join']);
     Route::delete('/groups/{group}/leave', [GroupController::class, 'leave']);
     Route::delete('/groups/{group}', [GroupController::class, 'destroy']);
-    
-    // Plaid (we'll implement this next)
-    Route::post('/plaid/link-token', [PlaidController::class, 'createLinkToken']);
-    Route::post('/plaid/exchange-token', [PlaidController::class, 'exchangePublicToken']);
-    Route::post('/plaid/sync', [PlaidController::class, 'syncTransactions']);
-    Route::get('/plaid/accounts', [PlaidController::class, 'getAccounts']);
     
     // User
     Route::get('/user', function (Request $request) {

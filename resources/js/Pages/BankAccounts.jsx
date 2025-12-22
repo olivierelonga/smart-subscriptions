@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Building2, Check, Trash2, RefreshCw, TrendingUp } from 'lucide-react';
-import PlaidLink from '@/Components/PlaidLink';
+import { Building2, Check, Trash2, RefreshCw, TrendingUp, MapPin } from 'lucide-react';
+import StitchLink from '@/Components/StitchLink'; // Change this import
 import Toast from '@/Components/Toast';
-import api from '@/axios';
+import axios from 'axios';
 
-export default function BankAccounts({ auth }) {
+export default function BankAccounts({ auth, flash }) {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
@@ -16,38 +16,38 @@ export default function BankAccounts({ auth }) {
         loadAccounts();
     }, []);
 
+    // Show flash messages from Laravel redirects
+    useEffect(() => {
+        if (flash?.success) {
+            setToast({ message: flash.success, type: 'success' });
+        }
+        if (flash?.error) {
+            setToast({ message: flash.error, type: 'error' });
+        }
+    }, [flash]);
+
     const loadAccounts = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/plaid/accounts');
+            const response = await axios.get('/stitch/accounts');
             setAccounts(response.data.accounts || []);
         } catch (error) {
             console.error('Failed to load accounts:', error);
+            setToast({ message: 'Failed to load accounts', type: 'error' });
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handlePlaidSuccess = async (data) => {
-        setToast({ message: 'Bank account connected successfully!', type: 'success' });
-        await loadAccounts();
-        await syncTransactions();
-    };
-
-    const handlePlaidExit = (err, metadata) => {
-        if (err) {
-            setToast({ message: 'Failed to connect bank account', type: 'error' });
         }
     };
 
     const syncTransactions = async () => {
         try {
             setSyncing(true);
-            const response = await api.post('/plaid/sync');
+            const response = await axios.post('/stitch/sync');
             setToast({ 
                 message: `Synced ${response.data.count} transactions successfully!`, 
                 type: 'success' 
             });
+            await loadAccounts();
         } catch (error) {
             console.error('Failed to sync transactions:', error);
             setToast({ message: 'Failed to sync transactions', type: 'error' });
@@ -62,7 +62,7 @@ export default function BankAccounts({ auth }) {
         }
 
         try {
-            await api.delete(`/plaid/accounts/${accountId}`);
+            await axios.delete(`/stitch/accounts/${accountId}`);
             setToast({ message: 'Bank account disconnected', type: 'success' });
             await loadAccounts();
         } catch (error) {
@@ -89,22 +89,23 @@ export default function BankAccounts({ auth }) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     {/* Info Banner */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6 mb-6">
                         <div className="flex items-start space-x-3">
-                            <TrendingUp className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                            <MapPin className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
                             <div>
-                                <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                                    Automatic Subscription Detection
+                                <h3 className="text-lg font-semibold text-green-900 mb-2 flex items-center space-x-2">
+                                    <span>South African Bank Integration</span>
+                                    <span className="text-2xl">🇿🇦</span>
                                 </h3>
-                                <p className="text-blue-700 text-sm mb-3">
-                                    Connect your bank account to automatically detect recurring subscriptions from your transactions. 
-                                    Your data is encrypted and secure.
+                                <p className="text-green-700 text-sm mb-3">
+                                    Connect your South African bank account securely using Stitch. 
+                                    Supports all major SA banks including Standard Bank, FNB, Nedbank, Absa, and Capitec.
                                 </p>
-                                <ul className="text-sm text-blue-600 space-y-1">
+                                <ul className="text-sm text-green-600 space-y-1">
                                     <li>✓ Bank-level encryption</li>
                                     <li>✓ Read-only access</li>
                                     <li>✓ Automatic subscription detection</li>
-                                    <li>✓ Transaction syncing</li>
+                                    <li>✓ Real-time transaction syncing</li>
                                 </ul>
                             </div>
                         </div>
@@ -120,7 +121,7 @@ export default function BankAccounts({ auth }) {
                                 <button
                                     onClick={syncTransactions}
                                     disabled={syncing}
-                                    className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition disabled:opacity-50"
+                                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50"
                                 >
                                     <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
                                     <span>{syncing ? 'Syncing...' : 'Sync Transactions'}</span>
@@ -162,28 +163,46 @@ export default function BankAccounts({ auth }) {
                             Connect New Bank Account
                         </h3>
                         <p className="text-gray-600 mb-6">
-                            Use Plaid to securely connect your bank account. We'll automatically detect 
+                            Securely connect your South African bank account. We'll automatically detect 
                             your subscriptions and keep them up to date.
                         </p>
-                        <PlaidLink
-                            onSuccess={handlePlaidSuccess}
-                            onExit={handlePlaidExit}
-                        />
+                        <StitchLink onSuccess={loadAccounts} />
+                    </div>
+
+                    {/* Supported Banks */}
+                    <div className="mt-6 bg-white rounded-lg shadow-md p-6">
+                        <h4 className="font-semibold text-gray-900 mb-4">
+                            🏦 Supported South African Banks
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {['Standard Bank', 'FNB', 'Nedbank', 'Absa', 'Capitec', 'Investec', 'TymeBank', 'Discovery Bank'].map((bank) => (
+                                <div key={bank} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
+                                    <Check className="w-4 h-4 text-green-600" />
+                                    <span className="text-sm text-gray-700">{bank}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Testing Instructions */}
                     <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                         <h4 className="font-semibold text-yellow-900 mb-2">
-                            🧪 Sandbox Testing
+                            🧪 Sandbox Testing Mode
                         </h4>
                         <p className="text-yellow-800 text-sm mb-3">
-                            You're using Plaid Sandbox mode. Use these test credentials:
+                            You're currently in sandbox mode. To test:
                         </p>
-                        <div className="bg-white rounded p-3 text-sm space-y-1 font-mono">
-                            <div><strong>Username:</strong> user_good</div>
-                            <div><strong>Password:</strong> pass_good</div>
-                            <div><strong>Bank:</strong> Select any bank from the list</div>
-                        </div>
+                        <ol className="text-sm text-yellow-700 space-y-2 list-decimal list-inside">
+                            <li>Click "Connect South African Bank"</li>
+                            <li>You'll be redirected to Stitch's test environment</li>
+                            <li>Select any bank from the test list</li>
+                            <li>Use the test credentials provided by Stitch</li>
+                            <li>Authorize the connection</li>
+                            <li>You'll be redirected back here automatically</li>
+                        </ol>
+                        <p className="text-xs text-yellow-600 mt-3">
+                            Note: You need to sign up at <a href="https://stitch.money/developers" target="_blank" className="underline">stitch.money/developers</a> and add credentials to your .env file
+                        </p>
                     </div>
                 </div>
             </div>
@@ -198,14 +217,17 @@ function AccountCard({ account, onDelete }) {
 
     return (
         <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition">
-            <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white">
+            <div className="flex items-center space-x-4 flex-1">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center text-white">
                     <Building2 className="w-6 h-6" />
                 </div>
                 <div>
                     <h4 className="font-semibold text-gray-900">
-                        {account.institution_name || 'Unknown Bank'}
+                        {account.account_name || 'Bank Account'}
                     </h4>
+                    <p className="text-sm text-gray-600">
+                        Account: •••• {account.account_number?.slice(-4)}
+                    </p>
                     <p className="text-sm text-gray-600">
                         Last synced: {formattedDate}
                     </p>
@@ -218,6 +240,13 @@ function AccountCard({ account, onDelete }) {
                         <span className="text-xs text-red-600">Disconnected</span>
                     )}
                 </div>
+            </div>
+            <div className="text-right mr-4">
+                {account.current_balance !== null && (
+                    <p className="font-semibold text-gray-900">
+                        R{parseFloat(account.current_balance).toFixed(2)}
+                    </p>
+                )}
             </div>
             <button
                 onClick={() => onDelete(account.id)}
