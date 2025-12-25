@@ -9,7 +9,7 @@ use App\Http\Controllers\PlaidController;
 use App\Http\Controllers\PayFastController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RecommendationController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentController;;
 
 
 
@@ -59,6 +59,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/plans', [PaymentController::class, 'plans']);
     Route::post('/subscribe', [PaymentController::class, 'subscribe']);
     Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription']);
+
+    // Recommendations - ADD THESE
+    Route::get('/recommendations', [RecommendationController::class, 'index']);
+    Route::post('/recommendations/generate', [RecommendationController::class, 'generate']);
+    Route::post('/recommendations/{recommendation}/dismiss', [RecommendationController::class, 'dismiss']);
+    Route::post('/recommendations/{recommendation}/complete', [RecommendationController::class, 'complete']);
 });
 
 

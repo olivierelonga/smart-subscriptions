@@ -25,6 +25,14 @@ export default function Authenticated({ user, header, children }) {
                                 <NavLink href={route('bank-accounts')} active={route().current('bank-accounts')}>
                                     Bank Accounts
                                 </NavLink>
+
+                                <NavLink href={route('groups')} active={route().current('groups')}>
+                                    Groups
+                                </NavLink>
+
+                                <NavLink href={route('recommendations')} active={route().current('recommendations')}>
+                                    AI Recommendations
+                                </NavLink>
                             </div>
                         </div>
 

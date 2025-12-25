@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\PayFastController;
 use App\Http\Controllers\PlaidController;
+use App\Http\Controllers\StitchController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\RecommendationController;
 
 
 // Route::get('/', function () {
@@ -54,7 +56,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/stitch/accounts', [StitchController::class, 'getAccounts'])->name('stitch.accounts');
     Route::delete('/stitch/accounts/{account}', [StitchController::class, 'deleteAccount'])->name('stitch.delete');
 
+    //subscription Routes
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::delete('/subscriptions/{subscription}', [SubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
 
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+    
+    Route::get('/bank-accounts', function () {
+        return Inertia::render('BankAccounts');
+    })->name('bank-accounts');
+    
+    // Groups Route
+    Route::get('/groups', function () {
+        return Inertia::render('Groups');
+    })->name('groups');
+
+    // recommendations Route
+    Route::get('/recommendations', function () {
+        return Inertia::render('Recommendations');
+    })->name('recommendations');
 });
 
 require __DIR__.'/auth.php';

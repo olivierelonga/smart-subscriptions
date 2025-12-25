@@ -34,7 +34,9 @@ class SubscriptionController extends Controller
         ]);
     }
 
-    // Create new subscription manually
+    /**
+     * Store a new subscription
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,13 +44,14 @@ class SubscriptionController extends Controller
             'amount' => 'required|numeric|min:0',
             'billing_cycle' => 'required|in:daily,weekly,monthly,yearly',
             'next_billing_date' => 'required|date',
-            'category' => 'nullable|string',
+            'category' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         $subscription = Auth::user()->subscriptions()->create([
             ...$validated,
             'status' => 'active',
+            'is_shared' => false,
             'detection_method' => 'manual',
         ]);
 
@@ -84,11 +87,11 @@ class SubscriptionController extends Controller
         ]);
     }
 
-    // Delete subscription
     public function destroy(Subscription $subscription)
     {
+        // Ensure the subscription belongs to the logged-in user
         if ($subscription->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            abort(403, 'Unauthorized action.');
         }
 
         $subscription->delete();
