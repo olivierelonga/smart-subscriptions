@@ -36,6 +36,13 @@ class RecommendationController extends Controller
     // Generate new recommendations
     public function generate()
     {
+        if (Auth::user()->subscription_status !== 'active') {
+            return response()->json([
+                'message' => 'Upgrade to Pro to use AI recommendations',
+                'requires_subscription' => true
+            ], 403);
+        }
+
         try {
             $this->recommendationService->generateRecommendations(Auth::user());
             

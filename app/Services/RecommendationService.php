@@ -19,6 +19,83 @@ class RecommendationService
         $this->suggestFamilyPlanUpgrades($user);
         $this->identifyUnusedSubscriptions($user);
         $this->suggestCostSharing($user);
+
+        // Advanced AI Features (Pro only)
+        if ($user->subscription_status === 'active') {
+            $this->detectSpendingAnomalies($user);
+            $this->trackTrialSubscriptions($user);
+            $this->optimizeBundles($user);
+        }
+    }
+
+    // Detect Spending Anomalies (Spikes > 20%)
+    private function detectSpendingAnomalies(User $user)
+    {
+        $currentMonthCost = $user->subscriptions()->where('status', 'active')->sum('amount'); // Simplified
+        // In a real app, we'd compare with last month's cached total or transaction history
+        // For this demo, we'll simulate a check against a "virtual" average
+        $averageSpend = 500; // Mock average 
+
+        if ($currentMonthCost > $averageSpend * 1.2) {
+            $spike = $currentMonthCost - $averageSpend;
+            Recommendation::create([
+                'user_id' => $user->id,
+                'type' => 'anomaly',
+                'title' => 'Unusual Spending Spike Detected',
+                'description' => "Your subscription spending this month (R{$currentMonthCost}) is 20% higher than usual. Check for new charges of ~R{$spike}.",
+                'potential_savings' => $spike, 
+                'affected_subscriptions' => [],
+                'priority' => 9,
+                'status' => 'active',
+            ]);
+        }
+    }
+
+    // Track Trial Subscriptions ending soon
+    private function trackTrialSubscriptions(User $user)
+    {
+        $trials = $user->subscriptions()
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->where('name', 'like', '%Trial%')
+                  ->orWhere('name', 'like', '%Free%');
+            })
+            ->get();
+
+        foreach ($trials as $sub) {
+            Recommendation::create([
+                'user_id' => $user->id,
+                'type' => 'trial_ending',
+                'title' => "Trial Ending Soon: {$sub->name}",
+                'description' => "Your trial for {$sub->name} may be ending soon. Cancel now if you don't want to be charged R{$sub->amount}.",
+                'potential_savings' => $sub->amount * 12, // Save a year's worth
+                'affected_subscriptions' => [$sub->id],
+                'priority' => 10,
+                'status' => 'active',
+            ]);
+        }
+    }
+
+    // Smart Bundle Optimization
+    private function optimizeBundles(User $user)
+    {
+        $subs = $user->subscriptions()->where('status', 'active')->get();
+        $hasDisney = $subs->contains(fn($s) => stripos($s->name, 'Disney') !== false);
+        $hasHulu = $subs->contains(fn($s) => stripos($s->name, 'Hulu') !== false);
+        $hasESPN = $subs->contains(fn($s) => stripos($s->name, 'ESPN') !== false);
+
+        if ($hasDisney && $hasHulu && !$hasESPN) {
+             Recommendation::create([
+                'user_id' => $user->id,
+                'type' => 'bundle',
+                'title' => 'Bundle & Save: Disney Bundle',
+                'description' => "You pay separately for Disney+ and Hulu. Switch to the Disney Duo Basic bundle to save ~R40/month.",
+                'potential_savings' => 480,
+                'affected_subscriptions' => $subs->filter(fn($s) => stripos($s->name, 'Disney')!==false || stripos($s->name, 'Hulu')!==false)->pluck('id'),
+                'priority' => 7,
+                'status' => 'active',
+            ]);
+        }
     }
 
     // Detect redundant services (e.g., multiple streaming services)

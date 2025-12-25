@@ -78,3 +78,5 @@ Thumbs.db
 # -------------------------------------------------------------------
 .cache/
 coverage/
+gemini_subtrack_suggestions.md
+downgrade_user.php

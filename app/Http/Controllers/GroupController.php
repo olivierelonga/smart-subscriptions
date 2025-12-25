@@ -19,7 +19,8 @@ class GroupController extends Controller
             ->get();
 
         $memberGroups = Auth::user()->groupMemberships()
-            ->with(['sharingGroup.subscription', 'sharingGroup.owner'])
+            ->where('role', '!=', 'owner')
+            ->with(['sharingGroup.subscription', 'sharingGroup.owner', 'sharingGroup.members'])
             ->get()
             ->pluck('sharingGroup');
 
@@ -32,6 +33,13 @@ class GroupController extends Controller
     // Create new sharing group
     public function store(Request $request)
     {
+        if (Auth::user()->subscription_status !== 'active') {
+            return response()->json([
+                'message' => 'Upgrade to create sharing groups',
+                'requires_subscription' => true
+            ], 403);
+        }
+
         $validated = $request->validate([
             'subscription_id' => 'required|exists:subscriptions,id',
             'name' => 'required|string|max:255',
@@ -78,6 +86,8 @@ class GroupController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to create group: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
             return response()->json(['message' => 'Failed to create group'], 500);
         }
     }
@@ -136,6 +146,8 @@ class GroupController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to join group: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
             return response()->json(['message' => 'Failed to join group'], 500);
         }
     }
@@ -171,6 +183,8 @@ class GroupController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to leave group: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
             return response()->json(['message' => 'Failed to leave group'], 500);
         }
     }
@@ -195,6 +209,8 @@ class GroupController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to delete group: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
             return response()->json(['message' => 'Failed to delete group'], 500);
         }
     }

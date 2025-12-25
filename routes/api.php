@@ -55,12 +55,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/subscribe', [PayFastController::class, 'subscribe']);
     Route::post('/subscription/cancel', [PayFastController::class, 'cancelSubscription']);
-
-    Route::get('/plans', [PaymentController::class, 'plans']);
-    Route::post('/subscribe', [PaymentController::class, 'subscribe']);
-    Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription']);
-
-
 });
 
 

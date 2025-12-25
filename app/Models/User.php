@@ -14,6 +14,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'subscription_plan',
+        'subscription_status',
+        'payfast_token',
+        'subscription_ends_at',
+        'stripe_customer_id',
+        'stripe_subscription_id',
     ];
 
     protected $hidden = [

@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { Lightbulb, TrendingDown, Users, X, Check, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 import Toast from '@/Components/Toast';
+import UpgradeModal from '@/Components/UpgradeModal';
 import axios from 'axios';
 
 export default function Recommendations({ auth }) {
@@ -10,6 +11,7 @@ export default function Recommendations({ auth }) {
     const [totalSavings, setTotalSavings] = useState(0);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [toast, setToast] = useState(null);
 
     useEffect(() => {
@@ -39,7 +41,11 @@ export default function Recommendations({ auth }) {
             setToast({ message: `Generated ${response.data.count} new recommendations!`, type: 'success' });
         } catch (error) {
             console.error('Failed to generate recommendations:', error);
-            setToast({ message: 'Failed to generate recommendations', type: 'error' });
+            if (error.response?.status === 403) {
+                setShowUpgradeModal(true);
+            } else {
+                setToast({ message: 'Failed to generate recommendations', type: 'error' });
+            }
         } finally {
             setGenerating(false);
         }
@@ -68,7 +74,7 @@ export default function Recommendations({ auth }) {
     };
 
     const getIcon = (type) => {
-        switch(type) {
+        switch (type) {
             case 'redundant':
                 return <TrendingDown className="w-6 h-6" />;
             case 'share':
@@ -121,6 +127,12 @@ export default function Recommendations({ auth }) {
                     message={toast.message}
                     type={toast.type}
                     onClose={() => setToast(null)}
+                />
+            )}
+
+            {showUpgradeModal && (
+                <UpgradeModal
+                    onClose={() => setShowUpgradeModal(false)}
                 />
             )}
 
@@ -318,7 +330,7 @@ function RecommendationCard({ recommendation, onDismiss, onComplete, icon, color
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2 flex-shrink-0">
                     <button
                         onClick={() => onComplete(recommendation.id)}

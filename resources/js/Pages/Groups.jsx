@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { Users, Plus, Copy, Check, Trash2, LogOut, Crown } from 'lucide-react';
 import Toast from '@/Components/Toast';
+import UpgradeModal from '@/Components/UpgradeModal';
 import axios from 'axios';
 
 export default function Groups({ auth }) {
@@ -12,6 +13,7 @@ export default function Groups({ auth }) {
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showJoinModal, setShowJoinModal] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [toast, setToast] = useState(null);
 
     useEffect(() => {
@@ -47,7 +49,12 @@ export default function Groups({ auth }) {
             setShowCreateModal(false);
             await loadGroups();
         } catch (error) {
-            setToast({ message: 'Failed to create group', type: 'error' });
+            if (error.response?.status === 403) {
+                setShowCreateModal(false);
+                setShowUpgradeModal(true);
+            } else {
+                setToast({ message: 'Failed to create group', type: 'error' });
+            }
         }
     };
 
@@ -127,7 +134,7 @@ export default function Groups({ auth }) {
                             💰 Save Money Together
                         </h3>
                         <p className="text-blue-700 text-sm">
-                            Create cost-sharing groups to split subscription costs with friends and family. 
+                            Create cost-sharing groups to split subscription costs with friends and family.
                             Share Netflix, Spotify, or any subscription - everyone pays their fair share automatically!
                         </p>
                     </div>
@@ -199,6 +206,13 @@ export default function Groups({ auth }) {
                     onSubmit={handleJoinGroup}
                 />
             )}
+
+            {/* Upgrade Modal */}
+            {showUpgradeModal && (
+                <UpgradeModal
+                    onClose={() => setShowUpgradeModal(false)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -253,9 +267,8 @@ function GroupCard({ group, isOwner, onDelete, onLeave }) {
                 </div>
                 <div>
                     <p className="text-xs text-gray-500">Status</p>
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
                         {group.status}
                     </span>
                 </div>
