@@ -60,11 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscribe', [PaymentController::class, 'subscribe']);
     Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription']);
 
-    // Recommendations - ADD THESE
-    Route::get('/recommendations', [RecommendationController::class, 'index']);
-    Route::post('/recommendations/generate', [RecommendationController::class, 'generate']);
-    Route::post('/recommendations/{recommendation}/dismiss', [RecommendationController::class, 'dismiss']);
-    Route::post('/recommendations/{recommendation}/complete', [RecommendationController::class, 'complete']);
+
 });
 
 

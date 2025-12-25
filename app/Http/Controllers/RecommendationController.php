@@ -22,7 +22,6 @@ class RecommendationController extends Controller
         $recommendations = Auth::user()->recommendations()
             ->where('status', 'active')
             ->orderByDesc('priority')
-            ->with('affectedSubscriptions')
             ->get();
 
         $totalPotentialSavings = $recommendations->sum('potential_savings');
@@ -51,6 +50,9 @@ class RecommendationController extends Controller
                 'count' => $recommendations->count(),
             ]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Recommendation generation failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Failed to generate recommendations',
                 'error' => $e->getMessage(),

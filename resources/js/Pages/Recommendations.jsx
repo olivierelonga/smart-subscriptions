@@ -19,7 +19,7 @@ export default function Recommendations({ auth }) {
     const loadRecommendations = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/recommendations');
+            const response = await axios.get('/api/recommendations');
             setRecommendations(response.data.recommendations || []);
             setTotalSavings(response.data.total_potential_savings || 0);
         } catch (error) {
@@ -33,7 +33,7 @@ export default function Recommendations({ auth }) {
     const generateRecommendations = async () => {
         setGenerating(true);
         try {
-            const response = await axios.post('/recommendations/generate');
+            const response = await axios.post('/api/recommendations/generate');
             setRecommendations(response.data.recommendations || []);
             setTotalSavings(response.data.total_potential_savings || 0);
             setToast({ message: `Generated ${response.data.count} new recommendations!`, type: 'success' });
@@ -47,7 +47,7 @@ export default function Recommendations({ auth }) {
 
     const dismissRecommendation = async (id) => {
         try {
-            await axios.post(`/recommendations/${id}/dismiss`);
+            await axios.post(`/api/recommendations/${id}/dismiss`);
             setRecommendations(recommendations.filter(r => r.id !== id));
             setToast({ message: 'Recommendation dismissed', type: 'success' });
         } catch (error) {
@@ -58,7 +58,7 @@ export default function Recommendations({ auth }) {
 
     const completeRecommendation = async (id) => {
         try {
-            await axios.post(`/recommendations/${id}/complete`);
+            await axios.post(`/api/recommendations/${id}/complete`);
             setRecommendations(recommendations.filter(r => r.id !== id));
             setToast({ message: 'Great job! Recommendation completed 🎉', type: 'success' });
         } catch (error) {

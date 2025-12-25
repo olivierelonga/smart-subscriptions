@@ -51,9 +51,9 @@ class RecommendationService
                         'user_id' => $user->id,
                         'type' => 'redundant',
                         'title' => "Multiple {$category} subscriptions detected",
-                        'description' => "You have {$subs->count()} {$category} subscriptions costing ${$totalCost}/month. Consider keeping only your favorite to save money.",
+                        'description' => "You have {$subs->count()} {$category} subscriptions costing {$totalCost}/month. Consider keeping only your favorite to save money.",
                         'potential_savings' => $potentialSavings * 12, // Yearly savings
-                        'affected_subscriptions' => json_encode($subs->pluck('id')),
+                        'affected_subscriptions' => $subs->pluck('id'),
                         'priority' => $this->calculatePriority($potentialSavings * 12),
                         'status' => 'active',
                     ]);
@@ -90,9 +90,9 @@ class RecommendationService
                                 'user_id' => $user->id,
                                 'type' => 'upgrade',
                                 'title' => "Upgrade to {$service} Family Plan",
-                                'description' => "Share a family plan with {$plans['max_members']} people and pay only ${$costPerMember}/month instead of ${$sub->amount}/month.",
+                                'description' => "Share a family plan with {$plans['max_members']} people and pay only {$costPerMember}/month instead of {$sub->amount}/month.",
                                 'potential_savings' => $potentialSavings,
-                                'affected_subscriptions' => json_encode([$sub->id]),
+                                'affected_subscriptions' => [$sub->id],
                                 'priority' => $this->calculatePriority($potentialSavings),
                                 'status' => 'active',
                             ]);
@@ -126,9 +126,9 @@ class RecommendationService
                     'user_id' => $user->id,
                     'type' => 'cancel',
                     'title' => "Review {$sub->name} subscription",
-                    'description' => "You've been subscribed for over 3 months. Make sure you're still using this service to avoid wasting ${$yearlyAmount}/year.",
+                    'description' => "You've been subscribed for over 3 months. Make sure you're still using this service to avoid wasting {$yearlyAmount}/year.",
                     'potential_savings' => $yearlyAmount,
-                    'affected_subscriptions' => json_encode([$sub->id]),
+                    'affected_subscriptions' => [$sub->id],
                     'priority' => $this->calculatePriority($yearlyAmount),
                     'status' => 'active',
                 ]);
@@ -159,9 +159,9 @@ class RecommendationService
                     'user_id' => $user->id,
                     'type' => 'share',
                     'title' => "Share {$sub->name} to save money",
-                    'description' => "Create a cost-sharing group and split this subscription with friends or family. You could save up to ${$estimatedSavings}/year.",
+                    'description' => "Create a cost-sharing group and split this subscription with friends or family. You could save up to R{$estimatedSavings}/year.",
                     'potential_savings' => $estimatedSavings,
-                    'affected_subscriptions' => json_encode([$sub->id]),
+                    'affected_subscriptions' => [$sub->id],
                     'priority' => $this->calculatePriority($estimatedSavings),
                     'status' => 'active',
                 ]);

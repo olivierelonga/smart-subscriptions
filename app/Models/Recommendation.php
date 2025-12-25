@@ -25,13 +25,15 @@ class Recommendation extends Model
         'affected_subscriptions' => 'array',
     ];
 
+    protected $appends = ['affected_subscriptions_list'];
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Get affected subscription objects
-    public function affectedSubscriptions()
+    // Get affected subscription objects as an attribute
+    public function getAffectedSubscriptionsListAttribute()
     {
         if (empty($this->affected_subscriptions)) {
             return collect([]);
